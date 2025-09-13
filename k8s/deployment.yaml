@@ -15,23 +15,23 @@ spec:
         app: bms
     spec:
       containers:
-        - name: bms
-          image: prasanna394/bms-app:latest
+        - name: bms-container
+          image: prasanna394/bms-app:latest  # Use your Docker image
           ports:
-            - containerPort: 80
+            - containerPort: 3000
           env:
             - name: NODE_ENV
               value: "production"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: bms-service
-spec:
-  type: LoadBalancer      
-  selector:
-    app: bms
-  ports:
-    - protocol: TCP
-      port: 80             
-      targetPort: 80       
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+
