@@ -2,6 +2,7 @@
 FROM node:18
 
 # Set working directory
+RUN useradd -ms /bin/bash appuser
 WORKDIR /app
 
 # Copy package.json and package-lock.json
