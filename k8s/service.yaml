@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: bms-service
 spec:
-  type: NodePort
+  type: NodePort  
   selector:
     app: bms
   ports:
     - name: http
-      port: 80        # Service port
+      port: 80        # Service port inside cluster
       targetPort: 80  # Container's exposed port
-      nodePort: 30030 # NodePort (must be between 30000–32767)
+      nodePort: 30030 

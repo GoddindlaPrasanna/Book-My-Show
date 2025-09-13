@@ -16,22 +16,10 @@ spec:
     spec:
       containers:
         - name: bms
-          image: prasanna394/bms-app:1.0.0
+          image: prasanna394/bms-app:latest
           ports:
-            - containerPort: 80
+            - containerPort: 80   
           env:
             - name: NODE_ENV
               value: "production"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: bms-service
-spec:
-  selector:
-    app: bms
-  ports:
-    - protocol: TCP
-      port: 80        # Service port
-      targetPort: 80  # Container port
-  type: LoadBalancer
+
