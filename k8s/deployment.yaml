@@ -28,10 +28,10 @@ kind: Service
 metadata:
   name: bms-service
 spec:
+  type: LoadBalancer      
   selector:
     app: bms
   ports:
     - protocol: TCP
-      port: 80        # Service port
-      targetPort: 80  # Container port
-  type: LoadBalancer
+      port: 80             
+      targetPort: 80       
