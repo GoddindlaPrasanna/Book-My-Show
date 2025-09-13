@@ -5,13 +5,13 @@ pipeline {
 
     tools {
         jdk 'jdk17'
-        nodejs 'node23'
+        nodejs 'node24'
     }
 
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
-        DOCKER_IMAGE = 'akshu20791/bms:latest'
-        EKS_CLUSTER_NAME = 'akshat-eks'
+        DOCKER_IMAGE = 'prasanna394/bms-app:latest'
+        EKS_CLUSTER_NAME = 'prasanna-eks'
         AWS_REGION = 'us-east-1'
     }
 
@@ -24,15 +24,15 @@ pipeline {
 
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/akshu20791/Book-My-Show.git'
-                sh 'ls -la'  // Verify files after checkout
+                git branch: 'main', url: 'https://github.com/GoddindlaPrasanna/Book-My-Show.git'
+                sh 'ls -la'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar-server') {
-                    sh ''' 
+                    sh '''
                     $SCANNER_HOME/bin/sonar-scanner \
                         -Dsonar.projectName=BMS \
                         -Dsonar.projectKey=BMS
@@ -44,7 +44,7 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
                 }
             }
         }
@@ -53,12 +53,11 @@ pipeline {
             steps {
                 sh '''
                 cd bookmyshow-app
-                ls -la  # Verify package.json exists
                 if [ -f package.json ]; then
-                    rm -rf node_modules package-lock.json  # Remove old dependencies
-                    npm install  # Install fresh dependencies
+                    rm -rf node_modules package-lock.json
+                    npm install
                 else
-                    echo "Error: package.json not found in bookmyshow-app!"
+                    echo "Error: package.json not found!"
                     exit 1
                 fi
                 '''
@@ -82,11 +81,8 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        sh ''' 
-                        echo "Building Docker image..."
+                        sh '''
                         docker build --no-cache -t $DOCKER_IMAGE -f bookmyshow-app/Dockerfile bookmyshow-app
-
-                        echo "Pushing Docker image to Docker Hub..."
                         docker push $DOCKER_IMAGE
                         '''
                     }
@@ -94,24 +90,18 @@ pipeline {
             }
         }
 
-        stage('Deploy to EKS Cluster') {
+        stage('Deploy to EKS') {
             steps {
                 script {
                     sh '''
-                    echo "Verifying AWS credentials..."
-                    aws sts get-caller-identity
-
-                    echo "Configuring kubectl for EKS cluster..."
+                    # Configure kubectl with EKS
                     aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
 
-                    echo "Verifying kubeconfig..."
-                    kubectl config view
+                    # Apply Kubernetes manifests from k8s folder
+                    kubectl apply -f k8s/deployment.yaml
+                    kubectl apply -f k8s/service.yaml
 
-                    echo "Deploying application to EKS..."
-                    kubectl apply -f deployment.yml
-                    kubectl apply -f service.yml
-
-                    echo "Verifying deployment..."
+                    # Verify deployment
                     kubectl get pods
                     kubectl get svc
                     '''
@@ -123,12 +113,15 @@ pipeline {
     post {
         always {
             emailext attachLog: true,
-                subject: "'${currentBuild.result}'",
-                body: "Project: ${env.JOB_NAME}<br/>" +
-                      "Build Number: ${env.BUILD_NUMBER}<br/>" +
-                      "URL: ${env.BUILD_URL}<br/>",
-                to: 'kastrokiran@gmail.com',
+                subject: "'${currentBuild.result}' - BMS Pipeline",
+                body: """
+                Project: ${env.JOB_NAME}<br/>
+                Build Number: ${env.BUILD_NUMBER}<br/>
+                Build URL: ${env.BUILD_URL}<br/>
+                """,
+                to: 'prasanna56439@gmail.com',
                 attachmentsPattern: 'trivyfs.txt'
         }
     }
 }
+
