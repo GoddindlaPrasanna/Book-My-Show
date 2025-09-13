@@ -1,13 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: bookmyshow-service
-  labels:
-    app: bookmyshow
+  name: bms-service
 spec:
-  type: LoadBalancer
   selector:
-    app: bookmyshow
+    app: bms
   ports:
-    - port: 80
-      targetPort: 3000
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
